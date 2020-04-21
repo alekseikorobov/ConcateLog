@@ -55,10 +55,14 @@ namespace ConcatFiles
         {
             var dirSrc = options.Source;
 
+            SearchOption searchOption = SearchOption.TopDirectoryOnly;
+            if (options.AllDirectory)
+                searchOption = SearchOption.AllDirectories;
             if (!string.IsNullOrEmpty(options.Template))
             {
                 Console.WriteLine($"»спользуетс€ шаблон дл€ поиска файлов - {options.Template}");
-                return Directory.GetFiles(dirSrc, options.Template);
+
+                return Directory.GetFiles(dirSrc, options.Template, searchOption);
             }
             else
             {
@@ -67,7 +71,7 @@ namespace ConcatFiles
                     Console.WriteLine($"»спользуетс€ регул€рное выражение дл€ поиска файлов - {options.Query}");
                     Regex reg = new Regex(options.Query, RegexOptions.Compiled);
 
-                    var files = new DirectoryInfo(dirSrc).GetFiles();
+                    var files = new DirectoryInfo(dirSrc).GetFiles("*", searchOption);
                     return files.Where(c => reg.IsMatch(c.Name)).Select(c => c.FullName).ToArray();
                 }
             }
@@ -128,9 +132,11 @@ namespace ConcatFiles
                     string newLinestr = "";
                     while ((line = sr.ReadLine()) != null)
                     {
-                        newLinestr = reg != null && reg.IsMatch(line) ? sw.NewLine : "</br>";
+                        newLinestr = reg == null || reg.IsMatch(line) ? sw.NewLine : "</br>";
                         sw.Write(newLinestr + line);
                     }
+
+                    sw.Write(sw.NewLine);
                 }
             }
         }

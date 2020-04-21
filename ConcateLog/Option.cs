@@ -26,5 +26,8 @@ namespace ConcatFiles
 
         [Option('k', "Skip", Required = false, HelpText = "указывает нужно ли пропустить первую срочку каждого файла (если есть заголовок)")]
         public bool Skip { get; set; }
+
+        [Option('a', "addSubDirectory", Required = false, HelpText = "Если флаг есть, то будут происходить поиск по поддиректориям")]
+        public bool AllDirectory { get; internal set; }
     }
 }
