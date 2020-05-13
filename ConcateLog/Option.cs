@@ -26,5 +26,8 @@ namespace ConcatFiles
 
         [Option('k', "Skip", Required = false, HelpText = "указывает нужно ли пропустить первую срочку каждого файла (если есть заголовок)")]
         public bool Skip { get; set; }
+
+        [Option('e', "extract", Required = false, HelpText = "Извлекает подстроку по регулярному выражению.")]
+        public string ExtractExpression { get; set; }
     }
 }
