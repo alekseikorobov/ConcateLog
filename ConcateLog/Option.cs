@@ -29,5 +29,8 @@ namespace ConcatFiles
 
         [Option('e', "extract", Required = false, HelpText = "Извлекает подстроку по регулярному выражению.")]
         public string ExtractExpression { get; set; }
+
+        [Option('a', "addSubDirectory", Required = false, HelpText = "Если флаг есть, то будут происходить поиск по поддиректориям")]
+        public bool AllDirectory { get; internal set; }
     }
 }
