@@ -31,7 +31,7 @@ namespace ConcatFiles
                 var patern = options.Pattern;
                 if (options.DefoultPatern1)
                     patern = "^\\d+-\\d+-\\d+ \\d+:\\d+:\\d+.\\d+.*";
-
+                
                 Write(sourcePaths, patern, options);
             }
             catch (Exception ex)
@@ -62,7 +62,10 @@ namespace ConcatFiles
             {
                 Console.WriteLine($"Используется шаблон для поиска файлов - {options.Template}");
 
-                return Directory.GetFiles(dirSrc, options.Template, searchOption);
+                if(Directory.Exists(dirSrc))
+                    return Directory.GetFiles(dirSrc, options.Template, searchOption);
+                else
+                    return new string[0];
             }
             else
             {
@@ -100,6 +103,13 @@ namespace ConcatFiles
             }
             var resu = Parser.Default.ParseArguments<Options>(args);
 
+            Console.WriteLine("-----args----");
+            foreach (var a in args)
+            {
+                Console.WriteLine(a);
+            }
+            Console.WriteLine("-------------");
+
             resu.WithParsed(RunOptions);
 
             if (isWait)
@@ -109,23 +119,32 @@ namespace ConcatFiles
         private static void Write(string[] sourcePaths, string pattern, Options options)
         {
             string targetPath = options.Result;
+            if (options.IsDeleteFileBeforeRun)
+                File.Delete(targetPath);
+
             bool skipFirstLine = options.Skip;
 
             Regex reg = null;
             if (!string.IsNullOrEmpty(pattern))
             {
-                Console.WriteLine($"Using pattern - '{pattern}'");
                 reg = new Regex(pattern, RegexOptions.Compiled);
             }
 
             Console.WriteLine($"Count file {sourcePaths.Length}");
             foreach (var path in sourcePaths)
             {
-                WriteLine(path, targetPath, skipFirstLine, reg, options.ExtractExpression);
+                try
+                {
+                    WriteLine(path, targetPath, skipFirstLine, reg, options.ExtractExpression, options.IsWritePath);
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
             }
         }
 
-        private static void WriteLine(string sourcePath, string targetPath, bool skipFirstLine, Regex reg, string extractExpression)
+        private static void WriteLine(string sourcePath, string targetPath, bool skipFirstLine, Regex reg, string extractExpression, bool isWritePath)
         {
             Console.WriteLine($"{sourcePath}   ->   {targetPath}");
             using (StreamReader sr = new StreamReader(sourcePath, Encoding.GetEncoding(1251)))
@@ -137,6 +156,8 @@ namespace ConcatFiles
                         sr.ReadLine();
 
                     line = sr.ReadLine();
+                    if (line == null)
+                        return;
 
                     if (!string.IsNullOrEmpty(extractExpression))
                     {
@@ -146,11 +167,13 @@ namespace ConcatFiles
                         line = newLine;
                     }
 
-                    sw.Write(line);
+                    if (!string.IsNullOrEmpty(line))
+                        sw.Write(line);
                     string newLinestr = "";
+                    bool isWrite = false;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        
+
 
                         if (!string.IsNullOrEmpty(extractExpression))
                         {
@@ -158,13 +181,23 @@ namespace ConcatFiles
                             var m = r.Match(line);
                             var newLine = string.Join("\t", m.Groups.Cast<Group>().Skip(1).Select(c => c.Value));
                             line = newLine;
+                            if (string.IsNullOrEmpty(line)) continue;
                         }
 
-                        newLinestr = reg == null || reg.IsMatch(line) ? sw.NewLine : "</br>";
-                        sw.Write(newLinestr + line);
-                    }
+                        if (isWrite)
+                            newLinestr = reg == null || reg.IsMatch(line) ? sw.NewLine : "</br>";
+                        else
+                            isWrite = true;
 
-                    sw.Write(sw.NewLine);
+                        string path = "";
+                        if (isWritePath)
+                        {
+                            path = sourcePath + "\t";
+                        }
+                        sw.Write(newLinestr + path + line);
+                    }
+                    if(isWrite)
+                        sw.Write(sw.NewLine);
                 }
             }
         }

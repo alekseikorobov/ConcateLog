@@ -32,5 +32,12 @@ namespace ConcatFiles
 
         [Option('a', "addSubDirectory", Required = false, HelpText = "Если флаг есть, то будут происходить поиск по поддиректориям")]
         public bool AllDirectory { get; internal set; }
+
+        [Option('d', "isDeleteFileBeforeRun", Required = false, HelpText = "Удаляет результатирующей файл, если есть, перед запуском")]
+        public bool IsDeleteFileBeforeRun { get; internal set; }
+
+        [Option('w', "writePath", Required = false, HelpText = "если флаг есть, то записывается полный путь файла из которого найдено совпадение")]
+        public bool IsWritePath { get; internal set; }
+
     }
 }
