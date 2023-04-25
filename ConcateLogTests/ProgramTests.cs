@@ -17,7 +17,7 @@ namespace ConcatFiles.Tests
        
             var line = "text1 text2 text3 text4 text5 text6";
 
-            line = Program.ParseBySep(line, sep: " ", getIndexs: new int[] { 0, 2 });
+            line = Program.ParseBySep(line, sep: ' ', getIndexs: new int[] { 0, 2 });
 
             Assert.AreEqual("text1\ttext3", line);
         }

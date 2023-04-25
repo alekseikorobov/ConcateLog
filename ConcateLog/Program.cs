@@ -137,14 +137,23 @@ namespace ConcatFiles
             }
 
             Console.WriteLine($"Count file {sourcePaths.Length}");
-            foreach (var path in sourcePaths)
+            //foreach (var path in sourcePaths)
+            for (int i = 0; i < sourcePaths.Length; i++)
             {
                 try
                 {
+                    var path = sourcePaths[i];
+
+                    var separationLineChar = '0';
+                    if (!string.IsNullOrEmpty(options.SeparationLine))
+                        separationLineChar = options.SeparationLine[0];
+
+                    Console.WriteLine($"[{i + 1}/{sourcePaths.Length}] {path}   ->   {targetPath}");
+
                     WriteLine(path, targetPath, skipFirstLine, reg, 
                         options.ExtractExpression, options.IsWritePath
                         , options.SkipStartWith
-                        , options.SeparationLine
+                        , separationLineChar
                         , options.IndexElementArray
                         );
                 }
@@ -159,11 +168,11 @@ namespace ConcatFiles
             string targetPath, bool skipFirstLine, Regex reg, string extractExpression,
             bool isWritePath
             , string skipStartWith
-            , string separationLine
+            , char separationLine
             , string indexElementArray
             )
         {
-            Console.WriteLine($"{sourcePath}   ->   {targetPath}");
+            
             int[] getIndexs = null;
             if (!string.IsNullOrEmpty(indexElementArray))
             {
@@ -251,11 +260,14 @@ namespace ConcatFiles
         /// <param name="sep">seporator for split line as array</param>
         /// <param name="getIndexs">get element from array line</param>
         /// <returns>return new line joined by \t</returns>
-        public static string ParseBySep(string line, string sep, int[] getIndexs)
+        public static string ParseBySep(string line, char sep, int[] getIndexs)
         {
             if (!line.Contains(sep)) return "";
 
-            var list = line.Split(new[] { sep }, StringSplitOptions.RemoveEmptyEntries);
+            var list = line.Split(sep);
+
+            //такой вариан работает дольше
+            //return string.Join("\t",getIndexs.Select(i=>list[i]));
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < getIndexs.Length; i++)
