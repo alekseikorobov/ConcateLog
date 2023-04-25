@@ -4,6 +4,13 @@ namespace ConcatFiles
 {
     internal class Options
     {
+        [Option('c', "SkipStartWith", Required = false, HelpText = "пропускать строки начинающиеся с последовательности символов")]
+        public string SkipStartWith { get; set; }
+        [Option('l', "SeparationLine", Required = false, HelpText = "разделение строки на массив по указанным символам (используется для последующего соединия в одну строку по параметру IndexElementArray)")]
+        public string SeparationLine { get; set; }
+        [Option('x', "IndexElementArray", Required = false, HelpText = "индексы для получения из разбитой строки на элементы после SeparationLine. На вход подается индексы вида '0,1,2' в результате строка собирается через \t ")]
+        public string IndexElementArray { get; set; }
+
         [Option('s', "Source", Required = false, HelpText = "шаблон по которому ищутся источники файлов")]
         public string Source { get; set; }
         [Option('f', "File", Required = false, HelpText = "чтение из файла списка путей для объединения")]

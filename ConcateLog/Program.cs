@@ -8,13 +8,15 @@ using System.IO;
 using System.Text.RegularExpressions;
 using CommandLine;
 using CommandLine.Text;
+using System.Diagnostics;
 
 namespace ConcatFiles
 {
-    class Program
+    public class Program
     {
         static void RunOptions(Options options)
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 string[] sourcePaths = null;
@@ -31,7 +33,7 @@ namespace ConcatFiles
                 var patern = options.Pattern;
                 if (options.DefoultPatern1)
                     patern = "^\\d+-\\d+-\\d+ \\d+:\\d+:\\d+.\\d+.*";
-                
+
                 Write(sourcePaths, patern, options);
             }
             catch (Exception ex)
@@ -42,8 +44,9 @@ namespace ConcatFiles
                 Console.WriteLine(ex.StackTrace);
                 Console.ForegroundColor = temp;
             }
+            stopwatch.Stop();
 
-            Console.WriteLine("Done");
+            Console.WriteLine($"Done - {stopwatch.Elapsed}");
         }
 
         /// <summary>
@@ -62,7 +65,7 @@ namespace ConcatFiles
             {
                 Console.WriteLine($"Используется шаблон для поиска файлов - {options.Template}");
 
-                if(Directory.Exists(dirSrc))
+                if (Directory.Exists(dirSrc))
                     return Directory.GetFiles(dirSrc, options.Template, searchOption);
                 else
                     return new string[0];
@@ -87,9 +90,12 @@ namespace ConcatFiles
             args = new[]
             {
                 "-s",@"\MailServiceLog$\logs\",
-                "-p","^\\d+-\\d+-\\d+ \\d+:\\d+:\\d+,\\d+.*",
+                //"-p","^\\d+-\\d+-\\d+ \\d+:\\d+:\\d+,\\d+.*",
                 "-r","res.txt",
-                "-e","(^\\d+-\\d+-\\d+).*Message sent with template (.*)\\. From"
+                "-c","#",
+                "-l"," ",
+                "-x","0,1,3,7,11",
+
             };
 #endif
             bool isWait = false;
@@ -135,7 +141,12 @@ namespace ConcatFiles
             {
                 try
                 {
-                    WriteLine(path, targetPath, skipFirstLine, reg, options.ExtractExpression, options.IsWritePath);
+                    WriteLine(path, targetPath, skipFirstLine, reg, 
+                        options.ExtractExpression, options.IsWritePath
+                        , options.SkipStartWith
+                        , options.SeparationLine
+                        , options.IndexElementArray
+                        );
                 }
                 catch (Exception ex)
                 {
@@ -144,9 +155,22 @@ namespace ConcatFiles
             }
         }
 
-        private static void WriteLine(string sourcePath, string targetPath, bool skipFirstLine, Regex reg, string extractExpression, bool isWritePath)
+        private static void WriteLine(string sourcePath,
+            string targetPath, bool skipFirstLine, Regex reg, string extractExpression,
+            bool isWritePath
+            , string skipStartWith
+            , string separationLine
+            , string indexElementArray
+            )
         {
             Console.WriteLine($"{sourcePath}   ->   {targetPath}");
+            int[] getIndexs = null;
+            if (!string.IsNullOrEmpty(indexElementArray))
+            {
+                getIndexs = indexElementArray.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).
+                    Select(c => int.Parse(c.Trim())).ToArray();
+            }
+
             using (StreamReader sr = new StreamReader(sourcePath, Encoding.GetEncoding(1251)))
             {
                 using (StreamWriter sw = new StreamWriter(targetPath, true, Encoding.GetEncoding(1251)))
@@ -167,13 +191,27 @@ namespace ConcatFiles
                         line = newLine;
                     }
 
-                    if (!string.IsNullOrEmpty(line))
-                        sw.Write(line);
+                    if (!string.IsNullOrEmpty(line)
+                        && !string.IsNullOrEmpty(skipStartWith)
+                        && !line.StartsWith(skipStartWith)
+                        )
+                    {
+                        if (getIndexs != null)
+                        {
+                            line = ParseBySep(line, separationLine, getIndexs);
+                        }
+                        if (!string.IsNullOrEmpty(line))
+                            sw.Write(line);
+                    }
                     string newLinestr = "";
                     bool isWrite = false;
                     while ((line = sr.ReadLine()) != null)
                     {
-
+                        if (!string.IsNullOrEmpty(skipStartWith)
+                         && line.StartsWith(skipStartWith))
+                        {
+                            continue;
+                        }
 
                         if (!string.IsNullOrEmpty(extractExpression))
                         {
@@ -182,6 +220,10 @@ namespace ConcatFiles
                             var newLine = string.Join("\t", m.Groups.Cast<Group>().Skip(1).Select(c => c.Value));
                             line = newLine;
                             if (string.IsNullOrEmpty(line)) continue;
+                        }
+                        if (getIndexs != null)
+                        {
+                            line = ParseBySep(line, separationLine, getIndexs);
                         }
 
                         if (isWrite)
@@ -196,10 +238,33 @@ namespace ConcatFiles
                         }
                         sw.Write(newLinestr + path + line);
                     }
-                    if(isWrite)
+                    if (isWrite)
                         sw.Write(sw.NewLine);
                 }
             }
+        }
+        /// <summary>
+        /// Parse line by seporation using string split and get element by index
+        /// </summary>
+        /// <param name="line">input string line</param>
+        /// <param name="skipStartWith">if start by char then skip line and return string.Empty</param>
+        /// <param name="sep">seporator for split line as array</param>
+        /// <param name="getIndexs">get element from array line</param>
+        /// <returns>return new line joined by \t</returns>
+        public static string ParseBySep(string line, string sep, int[] getIndexs)
+        {
+            if (!line.Contains(sep)) return "";
+
+            var list = line.Split(new[] { sep }, StringSplitOptions.RemoveEmptyEntries);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < getIndexs.Length; i++)
+            {
+                sb.Append(list[getIndexs[i]]);
+                if (i != getIndexs.Length - 1)
+                    sb.Append('\t');
+            }
+            return sb.ToString();
         }
     }
 }
