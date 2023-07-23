@@ -68,7 +68,7 @@
 mkdir "$(TargetDir)Output"
 "$(SolutionDir)\packages\ILMerge.3.0.29\tools\net452\ILMerge.exe" /wildcards /out:"$(TargetDir)Output\$(TargetFileName)" "$(TargetPath)" "$(TargetDir)*.dll"  /closed
 rem COPY "$(TargetPath).config" "$(TargetDir)Output\$(TargetFileName).config"
-COPY "$(TargetDir)Output\$(TargetFileName)" "d:\DATA\other\MyProject\Code\bat\concateLog.exe"
+COPY "$(TargetDir)Output\$(TargetFileName)" "c:\Users\akorobov\OneDrive - KPMG\myProject\code\bat\concateLog.exe"
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
