@@ -8,6 +8,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using CommandLine;
 using CommandLine.Text;
+using System.Diagnostics;
 
 namespace ConcatFiles
 {
@@ -15,6 +16,7 @@ namespace ConcatFiles
     {
         static void RunOptions(Options options)
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 string[] sourcePaths = null;
@@ -25,7 +27,7 @@ namespace ConcatFiles
                 else
                 {
                     if (string.IsNullOrEmpty(options.File))
-                        throw new ArgumentException("не указан источник файлов");
+                        throw new ArgumentException("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ");
                     sourcePaths = File.ReadAllLines(options.File);
                 }
                 var patern = options.Pattern;
@@ -42,8 +44,9 @@ namespace ConcatFiles
                 Console.WriteLine(ex.StackTrace);
                 Console.ForegroundColor = temp;
             }
+            stopwatch.Stop();
 
-            Console.WriteLine("Done");
+            Console.WriteLine($"Done - {stopwatch.Elapsed}");
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace ConcatFiles
                 searchOption = SearchOption.AllDirectories;
             if (!string.IsNullOrEmpty(options.Template))
             {
-                Console.WriteLine($"Используется шаблон для поиска файлов - {options.Template}");
+                Console.WriteLine($"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - {options.Template}");
 
                 if (Directory.Exists(dirSrc))
                     return Directory.GetFiles(dirSrc, options.Template, searchOption);
@@ -71,7 +74,7 @@ namespace ConcatFiles
             {
                 if (!string.IsNullOrEmpty(options.Query))
                 {
-                    Console.WriteLine($"Используется регулярное выражение для поиска файлов - {options.Query}");
+                    Console.WriteLine($"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - {options.Query}");
                     Regex reg = new Regex(options.Query, RegexOptions.Compiled);
 
                     var files = new DirectoryInfo(dirSrc).GetFiles("*", searchOption);
@@ -160,7 +163,8 @@ namespace ConcatFiles
             groups.Clear();
 
             Console.WriteLine($"Count file {sourcePaths.Length}");
-            foreach (var path in sourcePaths)
+            //foreach (var path in sourcePaths)
+            for (int i = 0; i < sourcePaths.Length; i++)
             {
                 try
                 {
@@ -418,6 +422,32 @@ namespace ConcatFiles
                 sw.Write(list);
             }
             return false;
+        }
+        /// <summary>
+        /// Parse line by seporation using string split and get element by index
+        /// </summary>
+        /// <param name="line">input string line</param>
+        /// <param name="skipStartWith">if start by char then skip line and return string.Empty</param>
+        /// <param name="sep">seporator for split line as array</param>
+        /// <param name="getIndexs">get element from array line</param>
+        /// <returns>return new line joined by \t</returns>
+        public static string ParseBySep(string line, char sep, int[] getIndexs)
+        {
+            if (!line.Contains(sep)) return "";
+
+            var list = line.Split(sep);
+
+            //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            //return string.Join("\t",getIndexs.Select(i=>list[i]));
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < getIndexs.Length; i++)
+            {
+                sb.Append(list[getIndexs[i]]);
+                if (i != getIndexs.Length - 1)
+                    sb.Append('\t');
+            }
+            return sb.ToString();
         }
     }
 }
